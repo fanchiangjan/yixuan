@@ -2,171 +2,40 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>羿璿裝潢設計 - 完整報價系統</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>羿璿裝潢設計 - 專業報價系統</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background-color: #f8f9fa; font-family: "Microsoft JhengHei", sans-serif; padding: 20px; }
-        .quote-box { max-width: 1150px; margin: auto; background: white; padding: 30px; border: 1px solid #eee; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .control-panel { background: #e8f5e9; border: 1px solid #c8e6c9; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        body { background-color: #f0f2f5; font-family: "Microsoft JhengHei", sans-serif; padding: 10px; }
+        .quote-box { max-width: 1100px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .control-panel { background: #fff3cd; border: 1px solid #ffeeba; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
         .category-row { background-color: #343a40; color: white; font-weight: bold; }
-        .manual-input { background-color: #fff9c4 !important; border: 1px dotted #fbc02d !important; text-align: right; }
-        .final-price { color: #1565c0; font-weight: bold; }
-        .grand-total { background: #212529; color: #ffeb3b; padding: 15px; border-radius: 4px; }
-        @media print { .no-print { display: none; } .quote-box { border: none; box-shadow: none; width: 100%; margin: 0; padding: 0; } }
+        .manual-input { background-color: #fff9c4 !important; border: 1px solid #fbc02d !important; text-align: right; }
+        .final-price { color: #0d6efd; font-weight: bold; }
+        .grand-total { background: #212529; color: #ffeb3b; padding: 15px; border-radius: 4px; text-align: right; }
+        @media print { .no-print { display: none; } .quote-box { box-shadow: none; border: none; width: 100%; margin: 0; padding: 0; } }
     </style>
 </head>
 <body>
 
 <div id="app" class="quote-box">
-    <div class="text-center mb-4">
-        <h1 class="fw-bold">羿璿裝潢設計企業有限公司</h1>
-        <p class="text-muted">工程報價單試算工具 (1-12類別全導入版)</p>
+    <div class="text-center mb-3">
+        <h2 class="fw-bold">羿璿裝潢設計企業有限公司</h2>
+        <p class="text-muted small">專業報價系統 - 完整功能存檔版</p>
     </div>
 
     <div class="control-panel no-print">
-        <div class="row g-3 align-items-center">
-            <div class="col-md-3">
-                <label class="form-label fw-bold">📈 全域調幅 (%)</label>
-                <input type="number" v-model.number="globalMarkup" class="form-control" placeholder="0">
+        <div class="row g-2 align-items-end">
+            <div class="col-6 col-md-2">
+                <label class="form-label small fw-bold">📈 全域調幅 %</label>
+                <input type="number" v-model.number="globalMarkup" class="form-control form-control-sm">
             </div>
-            <div class="col-md-3">
-                <label class="form-label fw-bold">🏗️ 監造費率 (%)</label>
-                <div class="input-group">
-                    <input type="number" v-model.number="supervisionRate" class="form-control fw-bold text-success">
-                    <span class="input-group-text">%</span>
-                </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label small fw-bold">🏗️ 監造費率 %</label>
+                <input type="number" v-model.number="supervisionRate" class="form-control form-control-sm text-success fw-bold">
             </div>
-            <div class="col-md-6 text-end pt-3">
-                <span class="badge bg-warning text-dark me-2">黃色欄位可改「式」單價</span>
-                <button class="btn btn-dark px-4" onclick="window.print()">列印報價單</button>
-            </div>
-        </div>
-    </div>
-
-    <table class="table table-bordered table-hover align-middle">
-        <thead class="table-secondary text-center">
-            <tr>
-                <th style="width: 40%;">工程項目名稱及說明</th>
-                <th style="width: 85px;">數量</th>
-                <th style="width: 60px;">單位</th>
-                <th style="width: 140px;">基準底價</th>
-                <th style="width: 140px;">調後單價</th>
-                <th style="width: 140px;">複價(小計)</th>
-            </tr>
-        </thead>
-        <tbody v-for="(group, cat) in groupedItems" :key="cat">
-            <tr class="category-row"><td colspan="6">{{ cat }}</td></tr>
-            <tr v-for="item in group" :key="item.name">
-                <td class="small">{{ item.name }}</td>
-                <td class="text-center">
-                    <input v-if="item.unit !== '式' && !item.isAuto" type="number" v-model.number="item.qty" class="form-control form-control-sm text-center">
-                    <span v-else>1</span>
-                </td>
-                <td class="text-center small">{{ item.unit }}</td>
-                <td class="text-center">
-                    <input v-if="item.unit === '式' && !item.isAuto" type="number" v-model.number="item.basePrice" class="form-control form-control-sm manual-input">
-                    <span v-else-if="item.isAuto" class="text-success small">自動計算 ({{ supervisionRate }}%)</span>
-                    <span v-else>${{ item.basePrice.toLocaleString() }}</span>
-                </td>
-                <td class="text-end final-price">${{ getFinalUnitPrice(item).toLocaleString() }}</td>
-                <td class="text-end fw-bold">${{ (getFinalUnitPrice(item) * (item.unit === '式' ? 1 : item.qty)).toLocaleString() }}</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <div class="mt-4">
-        <div class="row justify-content-end text-end">
-            <div class="col-md-5">
-                <div class="p-2 border-bottom">1-11項 工程小計： ${{ subtotalBeforeSupervision.toLocaleString() }}</div>
-                <div class="p-2 border-bottom">12項 監造費： ${{ Math.round(subtotalBeforeSupervision * (supervisionRate/100)).toLocaleString() }}</div>
-                <div class="grand-total mt-2">
-                    <h3 class="mb-0">總計金額：NT$ {{ totalAmount.toLocaleString() }}</h3>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-const { createApp } = Vue
-createApp({
-    data() {
-        return {
-            globalMarkup: 0,
-            supervisionRate: 12, // 初始設為 12%
-            items: [
-                { category: "1. 保護工程", name: "公共空間走道保護(白色+1分板)", unit: "式", basePrice: 8890, qty: 1 },
-                { category: "1. 保護工程", name: "電梯公共空間保護(3分板+透氣布)", unit: "式", basePrice: 13525, qty: 1 },
-                { category: "1. 保護工程", name: "室內地板保護(白色+1分板)", unit: "坪", basePrice: 625, qty: 0 },
-                
-                { category: "2. 拆除工程", name: "1/2磚牆面拆除", unit: "坪", basePrice: 2050, qty: 0 },
-                { category: "2. 拆除工程", name: "陽台女兒牆打除", unit: "坪", basePrice: 2050, qty: 0 },
-                { category: "2. 拆除工程", name: "地磚鑽除(含見底)", unit: "坪", basePrice: 2050, qty: 0 },
-                { category: "2. 拆除工程", name: "全室木作裝潢、門片、門組", unit: "樘", basePrice: 600, qty: 0 },
-                { category: "2. 拆除工程", name: "廢棄物清運費(合法轉運車)", unit: "車", basePrice: 15580, qty: 0 },
-
-                { category: "3. 水電工程", name: "配220V AC冷氣 & 全熱迴路", unit: "迴", basePrice: 4500, qty: 0 },
-                { category: "3. 水電工程", name: "開關/插座移位 (連工帶料)", unit: "處", basePrice: 750, qty: 0 },
-                { category: "3. 水電工程", name: "新增110V/220V專用插座", unit: "處", basePrice: 1550, qty: 0 },
-
-                { category: "4. 燈具工程", name: "LED崁燈 (15cm / 9.5cm)", unit: "盞", basePrice: 550, qty: 0 },
-                { category: "4. 燈具工程", name: "舞光軌道燈組/吸頂燈", unit: "組", basePrice: 1350, qty: 0 },
-
-                { category: "5. 泥作工程", name: "輕質牆自填補 (10cm)", unit: "坪", basePrice: 4650, qty: 0 },
-                { category: "5. 泥作工程", name: "浴室防水處理 (基礎3層)", unit: "式", basePrice: 6000, qty: 1 },
-                { category: "5. 泥作工程", name: "30*60地磚/牆磚鋪設 (不含磚)", unit: "坪", basePrice: 9520, qty: 0 },
-
-                { category: "6. 木作工程", name: "全室木作平頂天花板", unit: "坪", basePrice: 4350, qty: 0 },
-                { category: "6. 木作工程", name: "冷氣包管/窗簾盒", unit: "尺", basePrice: 2855, qty: 0 },
-                { category: "6. 木作工程", name: "木作隱藏門 (連工帶料/門片)", unit: "樘", basePrice: 30520, qty: 0 },
-
-                { category: "7. 油漆工程", name: "天花板/牆面乳膠漆 (虹牌/得利)", unit: "坪", basePrice: 1650, qty: 0 },
-                { category: "7. 油漆工程", name: "A級批土/打磨處理", unit: "坪", basePrice: 380, qty: 0 },
-
-                { category: "8. 系統櫃工程", name: "玄關/客廳組合收納櫃體", unit: "組", basePrice: 15435, qty: 0 },
-                { category: "8. 系統櫃工程", name: "主臥衣櫃區域 (高240/寬180)", unit: "組", basePrice: 31550, qty: 0 },
-
-                { category: "9. 冷氣工程", name: "Panasonic 變頻分離式主機/室內機", unit: "組", basePrice: 28500, qty: 0 },
-                { category: "9. 冷氣工程", name: "配合裝潢分次安裝施工費", unit: "式", basePrice: 10580, qty: 1 },
-
-                { category: "10. 清潔工程", name: "工程粗清/工程廢棄物搬運", unit: "坪", basePrice: 250, qty: 0 },
-                { category: "10. 清潔工程", name: "拆除後現場殘骸整理", unit: "車", basePrice: 15580, qty: 0 },
-
-                { category: "11. 全熱交換機", name: "台達電 PM2.5新風全熱交換器", unit: "組", basePrice: 39250, qty: 0 },
-                { category: "11. 全熱交換機", name: "交換管線配置與金屬套管", unit: "M", basePrice: 1885, qty: 0 },
-
-                { category: "12. 設計&監造", name: "工程監造費 (依工程比例)", unit: "式", basePrice: 0, qty: 1, isAuto: true }
-            ]
-        }
-    },
-    computed: {
-        groupedItems() {
-            return this.items.reduce((groups, item) => {
-                const group = (groups[item.category] || []);
-                group.push(item);
-                groups[item.category] = group;
-                return groups;
-            }, {});
-        },
-        subtotalBeforeSupervision() {
-            return this.items.filter(i => !i.isAuto).reduce((sum, i) => {
-                const q = i.unit === '式' ? 1 : (i.qty || 0);
-                return sum + (this.getFinalUnitPrice(i) * q);
-            }, 0);
-        },
-        totalAmount() {
-            const supervision = Math.round(this.subtotalBeforeSupervision * (this.supervisionRate / 100));
-            return this.subtotalBeforeSupervision + supervision;
-        }
-    },
-    methods: {
-        getFinalUnitPrice(item) {
-            if (item.isAuto) return Math.round(this.subtotalBeforeSupervision * (this.supervisionRate / 100));
-            return Math.round(item.basePrice * (1 + this.globalMarkup / 100));
-        }
-    }
-}).mount('#app')
-</script>
-</body>
-</html>
+            <div class="col-12 col-md-8 text-end">
+                <button class="btn btn-outline-primary btn-sm me-1" @click="saveToFile">💾 存檔此案</button>
+                <button class="btn btn-outline-secondary btn-sm me-1" @click="triggerUpload">📂 讀取舊案</button>
+                <input type="file" id="file
