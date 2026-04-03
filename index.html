@@ -8,7 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { background-color: #f0f2f5; font-family: "Microsoft JhengHei", sans-serif; padding: 10px; }
-        .quote-box { max-width: 1100px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .quote-box { max-width: 1150px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .control-panel { background: #fff3cd; border: 1px solid #ffeeba; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
         .client-info-section { background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #ddd; }
         .category-row { background-color: #343a40; color: white; font-weight: bold; }
@@ -36,15 +36,15 @@
 
     <div class="client-info-section">
         <div class="row g-3 text-start">
-            <div class="col-md-6 col-12 d-flex align-items-center"><span class="fw-bold me-2">業主名稱：</span><input v-model="client.name" class="no-border-input" placeholder="請輸入業主姓名"></div>
+            <div class="col-md-6 col-12 d-flex align-items-center"><span class="fw-bold me-2">業主名稱：</span><input v-model="client.name" class="no-border-input" placeholder="業主姓名"></div>
             <div class="col-md-6 col-12 d-flex align-items-center"><span class="fw-bold me-2">報價日期：</span><input type="date" v-model="client.date" class="no-border-input"></div>
             <div class="col-md-6 col-12 d-flex align-items-center"><span class="fw-bold me-2">工程地點：</span><input v-model="client.address" class="no-border-input" placeholder="施工地址"></div>
-            <div class="col-md-6 col-12 d-flex align-items-center"><span class="fw-bold me-2">聯絡電話：</span><input v-model="client.phone" class="no-border-input" placeholder="聯絡電話"></div>
+            <div class="col-md-6 col-12 d-flex align-items-center"><span class="fw-bold me-2">聯絡電話：</span><input v-model="client.phone" class="no-border-input" placeholder="電話"></div>
         </div>
     </div>
 
     <div class="control-panel no-print">
-        <div class="row g-2 align-items-end">
+        <div class="row g-2 align-items-end mb-3">
             <div class="col-6 col-md-2"><label class="small fw-bold">📈 全域調幅 %</label><input type="number" v-model.number="globalMarkup" class="form-control form-control-sm"></div>
             <div class="col-6 col-md-2"><label class="small fw-bold">🏗️ 監造費率 %</label><input type="number" v-model.number="supervisionRate" class="form-control form-control-sm fw-bold"></div>
             <div class="col-12 col-md-8 text-end">
@@ -57,6 +57,17 @@
                 <button class="btn btn-outline-secondary btn-sm me-1" @click="triggerUpload">📂 讀取</button>
                 <input type="file" id="fInput" @change="loadFromFile" style="display:none" accept=".json">
                 <button class="btn btn-dark btn-sm px-3" onclick="window.print()">🖨️ 列印/PDF</button>
+            </div>
+        </div>
+
+        <div class="p-2 border rounded bg-white">
+            <label class="small fw-bold text-primary mb-1">➕ 新增項目</label>
+            <div class="row g-1">
+                <div class="col-md-2"><input v-model="newItem.category" class="form-control form-control-sm" placeholder="類別(如:1.保護)"></div>
+                <div class="col-md-4"><input v-model="newItem.name" class="form-control form-control-sm" placeholder="項目名稱"></div>
+                <div class="col-md-1"><input v-model="newItem.unit" class="form-control form-control-sm" placeholder="單位"></div>
+                <div class="col-md-2"><input type="number" v-model.number="newItem.basePrice" class="form-control form-control-sm" placeholder="單價"></div>
+                <div class="col-md-2"><button class="btn btn-primary btn-sm w-100" @click="addNewItem">加入</button></div>
             </div>
         </div>
     </div>
@@ -73,12 +84,15 @@
                 </tr>
             </thead>
             <tbody v-for="(group, cat) in groupedItems" :key="cat">
-                <tr class="category-row" v-show="!previewMode || !isCategoryEmpty(group)" :class="{'category-empty': isCategoryEmpty(group)}">
+                <tr class="category-row" v-show="!previewMode || !isCategoryEmpty(group)">
                     <td colspan="5" class="small p-1 px-2">{{ cat }}</td>
                 </tr>
                 <tr v-for="item in group" :key="item.name" v-show="!previewMode || !isZero(item)" :class="{'is-zero-row': isZero(item)}">
                     <td>
-                        <div class="small fw-bold text-dark">{{ item.name }}</div>
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="small fw-bold text-dark">{{ item.name }}</div>
+                            <button v-if="!previewMode" @click="removeItem(item)" class="btn btn-outline-danger btn-xs p-0 px-1 no-print" style="font-size: 8px;">刪除</button>
+                        </div>
                         <input v-if="!previewMode" v-model="item.note" class="note-input" placeholder="輸入細項備註...">
                         <span v-else-if="item.note" class="note-display">{{ item.note }}</span>
                     </td>
@@ -91,7 +105,7 @@
                         <div v-if="!item.isAuto" class="input-group input-group-sm">
                             <input type="number" v-model.number="item.basePrice" class="form-control form-control-sm manual-input p-0 pe-1">
                         </div>
-                        <span v-else class="text-success" style="font-size:10px">自動連動</span>
+                        <span v-else class="text-success" style="font-size:10px">自動計算</span>
                     </td>
                     <td class="text-end fw-bold small pe-2 final-price">${{ getItemTotal(item).toLocaleString() }}</td>
                 </tr>
@@ -108,7 +122,7 @@
 
 <script>
 const PASS = "888";
-if(prompt("羿璿管理系統 - 登錄驗證：") !== PASS){ document.body.innerHTML = "密碼錯誤"; throw new Error(); }
+if(prompt("羿璿管理系統 - 登錄：") !== PASS){ document.body.innerHTML = "密碼錯誤"; throw new Error(); }
 
 const { createApp } = Vue
 createApp({
@@ -118,61 +132,45 @@ createApp({
             globalMarkup: 0,
             supervisionRate: 10,
             previewMode: false,
+            newItem: { category: '', name: '', unit: '', basePrice: 0 },
             items: [
-                // 1. 拆除/輕鋼架
-                { category: "1. 拆除清運工程", name: "全室木作/天花板拆除(一樓/地下室)", unit: "坪", basePrice: 920, qty: 0, note: "" },
-                { category: "1. 拆除清運工程", name: "1/2B牆面打除/隔間牆打除", unit: "坪", basePrice: 1850, qty: 0, note: "" },
-                { category: "1. 拆除清運工程", name: "地/壁磁磚剷除見底", unit: "坪", basePrice: 2000, qty: 0, note: "" },
-                { category: "1. 拆除清運工程", name: "全室房間&廁所-門片&門框拆除", unit: "樘", basePrice: 600, qty: 0, note: "" },
-                { category: "1. 拆除清運工程", name: "拆除裝潢後廢棄物清運車(合法運棄)", unit: "車", basePrice: 13850, qty: 0, note: "" },
-                { category: "1. 輕鋼架工程", name: "室內牆面隔間-單/雙面封版 9MM矽酸鈣板", unit: "M2", basePrice: 1200, qty: 0, note: "" },
-                { category: "1. 輕鋼架工程", name: "室內天花板暗架-平面天花板 6MM矽酸鈣板", unit: "M2", basePrice: 1100, qty: 0, note: "" },
+                // 1. 保護工程
+                { category: "1. 保護工程", name: "大樓公共區域/電梯/梯間 保護", unit: "式", basePrice: 12000, qty: 0, note: "含夾板、防潮布、防刮處理" },
+                { category: "1. 保護工程", name: "室內地坪保護(兩層)", unit: "坪", basePrice: 650, qty: 0, note: "防潮布+PP板" },
                 
-                // 2. 水電
-                { category: "2. 水電工程", name: "電器櫃/廚房 110V 專用迴路-5.5/太平洋", unit: "迴", basePrice: 4500, qty: 0, note: "" },
-                { category: "2. 水電工程", name: "配220V AC冷氣 & 全熱迴路-5.5/太平洋", unit: "迴", basePrice: 5200, qty: 0, note: "" },
-                { category: "2. 水電工程", name: "新增110V/220V插座出線口(含國際星光面板)", unit: "處", basePrice: 1650, qty: 0, note: "" },
-                { category: "2. 水電工程", name: "新增冷/熱給水管口 (不含龍頭)", unit: "處", basePrice: 2800, qty: 0, note: "" },
-                { category: "2. 水電工程", name: "1/4匹變頻穩壓加壓馬達", unit: "組", basePrice: 5510, qty: 0, note: "" },
+                // 2. 拆除工程
+                { category: "2. 拆除/清運工程", name: "室內木作/天花板拆除", unit: "坪", basePrice: 950, qty: 0, note: "含基礎釘子拔除" },
+                { category: "2. 拆除/清運工程", name: "地/壁磁磚剷除見底", unit: "坪", basePrice: 2200, qty: 0, note: "不含結構牆處理" },
+                { category: "2. 拆除/清運工程", name: "拆除裝潢廢棄物清運", unit: "車", basePrice: 13850, qty: 0, note: "合法廢棄物處理場" },
 
-                // 3. 衛浴燈具
-                { category: "3. 燈具衛浴設備", name: "舞光 LED 崁燈/吸頂燈/變色遙控燈", unit: "盞", basePrice: 550, qty: 0, note: "" },
-                { category: "3. 燈具衛浴設備", name: "TOTO 龍捲噴射式馬桶/溫水洗淨便座", unit: "顆", basePrice: 16700, qty: 0, note: "" },
-                { category: "3. 燈具衛浴設備", name: "TOTO 臉盆+長腳 / 龍頭五金", unit: "組", basePrice: 6845, qty: 0, note: "" },
-                { category: "3. 燈具衛浴設備", name: "乾濕分離淋浴滑門(強化清玻璃)", unit: "組", basePrice: 22586, qty: 0, note: "" },
+                // 3. 水電工程
+                { category: "3. 水電工程", name: "全室太平洋電線更換 (2.0/5.5)", unit: "式", basePrice: 65000, qty: 0, note: "含總盤調整" },
+                { category: "3. 水電工程", name: "新增110V/220V插座(國際星光)", unit: "處", basePrice: 1650, qty: 0, note: "含配管線" },
+                { category: "3. 水電工程", name: "舞光 LED 15cm 12W 崁燈", unit: "盞", basePrice: 650, qty: 0, note: "三色溫可調" },
 
-                // 4. 泥作/地板
-                { category: "4. 泥作/地板工程", name: "輕質白磚牆(10公分) 防火1小時", unit: "坪", basePrice: 4020, qty: 0, note: "" },
-                { category: "4. 泥作/地板工程", name: "廁所防水處理(上三層/漆到頂)", unit: "間", basePrice: 12600, qty: 0, note: "" },
-                { category: "4. 泥作/地板工程", name: "全室通鋪 PVC 地板 2MM+加黑底料", unit: "坪", basePrice: 1800, qty: 0, note: "" },
-                { category: "4. 泥作/地板工程", name: "大理石一字型門檻/折L型門檻", unit: "支", basePrice: 1000, qty: 0, note: "" },
+                // 4. 泥作工程
+                { category: "4. 泥作工程", name: "浴廁地面/牆面防水工程", unit: "間", basePrice: 15000, qty: 0, note: "彈性水泥三道工序" },
+                { category: "4. 泥作工程", name: "地磚/壁磚 鋪設工資", unit: "坪", basePrice: 4500, qty: 0, note: "不含瓷磚料費" },
 
-                // 5. 木作/系統櫃
-                { category: "5. 木作/系統櫃工程", name: "全室木作平頂天花板(環保腳料/矽酸鈣板)", unit: "坪", basePrice: 3850, qty: 0, note: "" },
-                { category: "5. 木作/系統櫃工程", name: "木作隱藏門(自動回歸油壓絞鍊)", unit: "樘", basePrice: 28900, qty: 0, note: "" },
-                { category: "5. 木作/系統櫃工程", name: "木作冷氣盒/包樑/窗簾盒", unit: "尺", basePrice: 480, qty: 0, note: "" },
-                { category: "5. 木作/系統櫃工程", name: "客廳玄關/電視牆邊 造型收納展示高櫃", unit: "組", basePrice: 23010, qty: 0, note: "" },
+                // 5. 木作工程
+                { category: "5. 木作工程", name: "全室矽酸鈣板暗架天花板", unit: "坪", basePrice: 4200, qty: 0, note: "日本麗仕 6mm" },
+                { category: "5. 木作工程", name: "窗簾盒/冷氣盒處理", unit: "尺", basePrice: 550, qty: 0, note: "含木作收邊" },
+                { category: "5. 木作工程", name: "隱藏門片(不含五金/鎖)", unit: "樘", basePrice: 12000, qty: 0, note: "造型面飾處理" },
 
-                // 6. 廚具
-                { category: "6. 廚具工程", name: "廚具矮櫃(含不鏽鋼抽籃/結晶鋼烤門板)", unit: "組", basePrice: 12680, qty: 0, note: "" },
-                { category: "6. 廚具工程", name: "韓國人造石廚具檯面(含雙水槽挖孔)", unit: "公分", basePrice: 100, qty: 0, note: "含背止水板5公分" },
-                { category: "6. 廚具工程", name: "SAKURA 櫻花 隱藏式除油煙機/玻璃檯面爐", unit: "組", basePrice: 8110, qty: 0, note: "" },
-                { category: "6. 廚具工程", name: "懸掛式觸控殺菌烘碗機(Q-7583)", unit: "組", basePrice: 13850, qty: 0, note: "" },
+                // 6. 油漆工程
+                { category: "6. 油漆工程", name: "天花板/牆面 水泥漆(虹牌/得利)", unit: "坪", basePrice: 1450, qty: 0, note: "含AB膠、批土兩道、打磨" },
+                { category: "6. 油漆工程", name: "跳色處理/特殊漆工資", unit: "式", basePrice: 5000, qty: 0, note: "每多一色計費" },
 
-                // 7. 油漆
-                { category: "7. 油漆工程", name: "天花板/牆面 虹牌/得利 水泥漆", unit: "坪", basePrice: 1250, qty: 0, note: "" },
-                { category: "7. 油漆工程", name: "天花板/牆面 AB膠+批土(兩道)", unit: "坪", basePrice: 300, qty: 0, note: "" },
-                { category: "7. 油漆工程", name: "斯特曼特殊漆(客廳電視牆面)", unit: "坪", basePrice: 8920, qty: 0, note: "" },
+                // 7. 系統/廚具
+                { category: "7. 系統櫃工程", name: "玄關/電視/衣櫃 系統收納櫃", unit: "尺", basePrice: 5500, qty: 0, note: "E1級V313塑合板" },
+                { category: "7. 廚具工程", name: "韓國人造石檯面/結晶鋼烤門片", unit: "式", basePrice: 85000, qty: 0, note: "不含三機電器" },
 
-                // 8. 冷氣/全熱
-                { category: "8. 冷氣/全熱工程", name: "三菱日本製全熱交換器(LGH-35RVX)", unit: "組", basePrice: 44900, qty: 0, note: "" },
-                { category: "8. 冷氣/全熱工程", name: "HITACHI 日立 變頻冷暖分離式(各型號)", unit: "組", basePrice: 52800, qty: 0, note: "" },
-                { category: "8. 冷氣/全熱工程", name: "日本住友 0.8 厚銅管(扣除基本米數)", unit: "米", basePrice: 750, qty: 0, note: "" },
-                { category: "8. 冷氣/全熱工程", name: "牆壁洗孔/配合裝潢分次安裝工資", unit: "式", basePrice: 9000, qty: 0, note: "" },
+                // 8. 其他
+                { category: "8. 鋁窗/玻璃", name: "氣密窗換裝工程", unit: "式", basePrice: 0, qty: 0, note: "視現場狀況報價" },
+                { category: "9. 清潔工程", name: "全室完工細緻清潔", unit: "坪", basePrice: 1200, qty: 0, note: "含櫃內、窗溝、五金、玻璃除汙" },
 
-                // 9. 監造
-                { category: "10. 設計&監造", name: "工程設計費(製圖/材質討論/3D圖面)", unit: "坪", basePrice: 3000, qty: 0, note: "" },
-                { category: "10. 設計&監造", name: "工程監造管理費", unit: "式", basePrice: 0, qty: 1, isAuto: true, note: "依本工程總額比例計" }
+                // 10. 管理
+                { category: "10. 設計&監造", name: "設計監造管理費", unit: "式", basePrice: 0, qty: 1, isAuto: true, note: "依總額比例計算" }
             ]
         }
     },
@@ -193,6 +191,14 @@ createApp({
         }
     },
     methods: {
+        addNewItem() {
+            if(!this.newItem.name || !this.newItem.category) return alert("請填寫類別與名稱");
+            this.items.push({ ...this.newItem, qty: 0, note: '' });
+            this.newItem = { category: this.newItem.category, name: '', unit: '', basePrice: 0 };
+        },
+        removeItem(item) {
+            if(confirm("確定刪除此項目？")) { this.items = this.items.filter(i => i !== item); }
+        },
         getItemTotal(item) {
             if (item.isAuto) return Math.round(this.subtotalBeforeSupervision * (this.supervisionRate / 100));
             return Math.round(item.basePrice * (1 + (this.globalMarkup || 0) / 100)) * (item.qty || 0);
@@ -204,13 +210,13 @@ createApp({
             const blob = new Blob([JSON.stringify(this.$data)], { type: "application/json" });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
-            link.download = `羿璿報價_${this.client.name}.json`;
+            link.download = `羿璿報價_${this.client.name || '未命名'}.json`;
             link.click();
         },
         triggerUpload() { document.getElementById('fInput').click(); },
         loadFromFile(event) {
             const reader = new FileReader();
-            reader.onload = (e) => { Object.assign(this.$data, JSON.parse(e.target.result)); alert("載入完成！"); };
+            reader.onload = (e) => { Object.assign(this.$data, JSON.parse(e.target.result)); alert("讀取完成！"); };
             reader.readAsText(event.target.files[0]);
         }
     }
