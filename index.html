@@ -8,7 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { background-color: #f0f2f5; font-family: "Microsoft JhengHei", sans-serif; padding: 10px; }
-        .quote-box { max-width: 1000px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .quote-box { max-width: 1100px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .control-panel { background: #fff3cd; border: 1px solid #ffeeba; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
         .client-info-section { background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #ddd; }
         .category-row { background-color: #343a40; color: white; font-weight: bold; }
@@ -16,6 +16,7 @@
         .grand-total { background: #212529; color: #ffeb3b; padding: 20px; border-radius: 4px; text-align: right; margin-top: 20px; }
         .no-border-input { border: none; border-bottom: 1px solid #ccc; background: transparent; width: 100%; padding: 2px 5px; }
         .no-border-input:focus { outline: none; border-bottom: 2px solid #333; }
+        .final-price { color: #0d6efd; font-weight: bold; }
         @media print { .no-print { display: none; } .quote-box { box-shadow: none; border: none; width: 100%; margin: 0; padding: 0; } .no-border-input { border-bottom: none; } }
     </style>
 </head>
@@ -24,34 +25,26 @@
 <div id="app" class="quote-box">
     <div class="text-center mb-4">
         <h2 class="fw-bold">羿璿裝潢設計企業有限公司</h2>
-        <h5 class="text-secondary">工程估價單</h5>
+        <h5 class="text-secondary fw-bold">工程報價單</h5>
     </div>
 
     <div class="client-info-section">
-        <div class="row g-3">
-            <div class="col-md-6 col-12">
-                <div class="d-flex align-items-center">
-                    <span style="white-space:nowrap" class="me-2 fw-bold">業主名稱：</span>
-                    <input type="text" v-model="client.name" class="no-border-input" placeholder="請輸入業主姓名">
-                </div>
+        <div class="row g-3 text-start">
+            <div class="col-md-6 col-12 d-flex align-items-center">
+                <span style="white-space:nowrap" class="fw-bold me-2">業主名稱：</span>
+                <input type="text" v-model="client.name" class="no-border-input" placeholder="請輸入姓名">
             </div>
-            <div class="col-md-6 col-12">
-                <div class="d-flex align-items-center">
-                    <span style="white-space:nowrap" class="me-2 fw-bold">報價日期：</span>
-                    <input type="date" v-model="client.date" class="no-border-input">
-                </div>
+            <div class="col-md-6 col-12 d-flex align-items-center">
+                <span style="white-space:nowrap" class="fw-bold me-2">報價日期：</span>
+                <input type="date" v-model="client.date" class="no-border-input">
             </div>
-            <div class="col-md-6 col-12">
-                <div class="d-flex align-items-center">
-                    <span style="white-space:nowrap" class="me-2 fw-bold">工程地點：</span>
-                    <input type="text" v-model="client.address" class="no-border-input" placeholder="請輸入施工地址">
-                </div>
+            <div class="col-md-6 col-12 d-flex align-items-center">
+                <span style="white-space:nowrap" class="fw-bold me-2">工程地點：</span>
+                <input type="text" v-model="client.address" class="no-border-input" placeholder="施工地址">
             </div>
-            <div class="col-md-6 col-12">
-                <div class="d-flex align-items-center">
-                    <span style="white-space:nowrap" class="me-2 fw-bold">聯絡電話：</span>
-                    <input type="text" v-model="client.phone" class="no-border-input" placeholder="請輸入聯絡電話">
-                </div>
+            <div class="col-md-6 col-12 d-flex align-items-center">
+                <span style="white-space:nowrap" class="fw-bold me-2">聯絡電話：</span>
+                <input type="text" v-model="client.phone" class="no-border-input" placeholder="聯絡電話">
             </div>
         </div>
     </div>
@@ -74,7 +67,7 @@
                 <button class="btn btn-dark btn-sm px-3" onclick="window.print()">🖨️ 列印/轉PDF</button>
             </div>
         </div>
-        <div class="mt-2 text-muted" style="font-size: 11px;">* 「本機暫存」會將資料鎖在此裝置瀏覽器中，下次開啟自動載入。</div>
+        <div class="mt-2 text-muted" style="font-size: 11px;">* 「本機暫存」會記住目前輸入的所有內容，下次開啟自動恢復。</div>
     </div>
 
     <div class="table-responsive">
@@ -100,113 +93,4 @@
                     <td>
                         <div v-if="item.unit === '式' && !item.isAuto" class="input-group input-group-sm">
                             <span class="input-group-text p-1" style="font-size: 10px;">$</span>
-                            <input type="number" v-model.number="item.basePrice" class="form-control form-control-sm manual-input p-1">
-                        </div>
-                        <span v-else-if="item.isAuto" class="text-success x-small" style="font-size: 11px;">自動連動</span>
-                        <span v-else class="ps-2 small">${{ item.basePrice.toLocaleString() }}</span>
-                    </td>
-                    <td class="text-end fw-bold small pe-2">${{ (getFinalUnitPrice(item) * (item.unit === '式' ? 1 : (item.qty || 0))).toLocaleString() }}</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
-    <div class="grand-total">
-        <div class="small mb-1">工程項目總計：${{ subtotalBeforeSupervision.toLocaleString() }}</div>
-        <div class="small mb-1 text-info">監造費 ({{ supervisionRate }}%)：${{ Math.round(subtotalBeforeSupervision * (supervisionRate/100)).toLocaleString() }}</div>
-        <h2 class="mb-0 mt-2">總計金額：NT$ {{ totalAmount.toLocaleString() }}</h2>
-    </div>
-</div>
-
-<script>
-// --- 1. 密碼驗證 ---
-const PASS = "888";
-if(prompt("請輸入登錄密碼：") !== PASS){ document.body.innerHTML = "密碼錯誤"; throw new Error(); }
-
-const { createApp } = Vue
-createApp({
-    data() {
-        return {
-            client: { name: '', date: new Date().toISOString().substr(0, 10), address: '', phone: '' },
-            globalMarkup: 0,
-            supervisionRate: 10,
-            items: [
-                { category: "1. 保護工程", name: "公共空間走道保護(白色+1分板)", unit: "式", basePrice: 8890, qty: 1 },
-                { category: "1. 保護工程", name: "室內地板保護(白色+1分板)", unit: "坪", basePrice: 625, qty: 0 },
-                { category: "2. 拆除工程", name: "1/2磚牆面拆除", unit: "坪", basePrice: 2050, qty: 0 },
-                { category: "6. 木作工程", name: "全室木作平頂天花板", unit: "坪", basePrice: 4350, qty: 0 },
-                { category: "12. 設計&監造", name: "工程監造費", unit: "式", basePrice: 0, qty: 1, isAuto: true }
-            ]
-        }
-    },
-    mounted() {
-        // 自動載入上次暫存的資料
-        const saved = localStorage.getItem('yixuan_temp_save');
-        if(saved) {
-            const data = JSON.parse(saved);
-            this.client = data.client;
-            this.globalMarkup = data.globalMarkup;
-            this.supervisionRate = data.supervisionRate;
-            this.items = data.items;
-        }
-    },
-    computed: {
-        groupedItems() {
-            return this.items.reduce((groups, item) => {
-                const group = (groups[item.category] || []);
-                group.push(item);
-                groups[item.category] = group;
-                return groups;
-            }, {});
-        },
-        subtotalBeforeSupervision() {
-            return this.items.filter(i => !i.isAuto).reduce((sum, i) => {
-                const q = i.unit === '式' ? 1 : (i.qty || 0);
-                return sum + (this.getFinalUnitPrice(i) * q);
-            }, 0);
-        },
-        totalAmount() {
-            const supervision = Math.round(this.subtotalBeforeSupervision * (this.supervisionRate / 100));
-            return this.subtotalBeforeSupervision + supervision;
-        }
-    },
-    methods: {
-        getFinalUnitPrice(item) {
-            if (item.isAuto) return Math.round(this.subtotalBeforeSupervision * (this.supervisionRate / 100));
-            return Math.round(item.basePrice * (1 + this.globalMarkup / 100));
-        },
-        // 本機暫存：自動記住內容
-        saveToLocal() {
-            const data = { client: this.client, globalMarkup: this.globalMarkup, supervisionRate: this.supervisionRate, items: this.items };
-            localStorage.setItem('yixuan_temp_save', JSON.stringify(data));
-            alert("已暫存於此裝置！下次開啟會自動載入目前進度。");
-        },
-        // 下載備份
-        saveToFile() {
-            const data = { client: this.client, globalMarkup: this.globalMarkup, supervisionRate: this.supervisionRate, items: this.items };
-            const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = `羿璿報價_${this.client.name}_${this.client.date}.json`;
-            link.click();
-        },
-        triggerUpload() { document.getElementById('fileInput').click(); },
-        loadFromFile(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const data = JSON.parse(e.target.result);
-                this.client = data.client;
-                this.globalMarkup = data.globalMarkup;
-                this.supervisionRate = data.supervisionRate;
-                this.items = data.items;
-                alert("存檔載入成功！");
-            };
-            reader.readAsText(file);
-        }
-    }
-}).mount('#app')
-</script>
-</body>
-</html>
+                            <input type="number" v-model.number="item
